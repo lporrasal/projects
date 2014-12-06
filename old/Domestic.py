@@ -1,0 +1,66 @@
+# per
+# Analyzes the NBA Salary to PER data set
+#
+# Author:   Benjamin Bengfort <benjamin@bengfort.com>
+# Created:  Sat Sep 20 09:35:11 2014 -0400
+#
+# Copyright (C) 2014 Bengfort.com
+# For license information, see LICENSE.txt
+#
+# ID: per.py [] benjamin@bengfort.com $
+ 
+"""
+Analyzes the NBA Salary to PER data set
+"""
+ 
+##########################################################################
+## Imports
+##########################################################################
+ 
+import csv
+ 
+from collections import Counter
+from operator import itemgetter
+ 
+##########################################################################
+## Analysis functions
+##########################################################################
+ 
+def load_data(path):
+    """
+    Loads the data from a file into a list.
+    """
+    with open(path, 'rU') as data:
+        reader = csv.DictReader(data)
+        for row in reader:
+            row['Pa'] = int(row['Pa'])
+            row['Distance'] = float(row['Distance'])
+            yield row
+ 
+def statistics(path):
+    data  = list(load_data(path))
+    data  = sorted(data, key=itemgetter('Pa'))
+ 
+    count = 0
+    total = 0.0
+    freqs = Counter()
+ 
+    for row in data:
+        count += 1
+        total += row['Pa']
+        freqs[row['Pa']] += 1
+ 
+    stats = {
+        'maximum': data[-1]['Pa'],
+        'minimum': data[0]['Pa'],
+        'median': data[count / 2]['Pa'],
+        'mode': freqs.most_common(2),
+        'mean': total / count,
+    }
+ 
+    return stats
+ 
+if __name__ == '__main__':
+    import json
+    print json.dumps(statistics('domestic.csv'), indent=4)
+

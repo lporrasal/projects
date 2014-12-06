@@ -1,0 +1,3 @@
+getwd()
+setwd("~/Dropbox/Public/DomConsAirfare CSV.csv")
+cd

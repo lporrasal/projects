@@ -1,0 +1,2262 @@
+\input texinfo @c -*-texinfo-*-
+
+@c %**start of header
+@setfilename .
+@settitle Statistics for Python
+@c %**end of header
+
+@ifinfo
+This is the manual for the Statistics for Python extension module.
+Copyright 2006 Michiel Jan Laurens de Hoon.
+@end ifinfo
+
+@titlepage
+@title Statistics for Python
+@subtitle An extension module for the Python scripting language
+@author Michiel de Hoon, Columbia University
+
+@c The following two commands start the copyright page.
+@page
+@vskip 0pt plus 1filll
+@today{} @*
+Statistics for Python, an extension module for the Python scripting language.
+
+Copyright @copyright{} 2006 Michiel Jan Laurens de Hoon
+@*
+This library was written at the Center for Computational Biology and
+Bioinformatics, Columbia University, 1130 Saint Nicholas Avenue,
+New York, NY 10032, United States.@*
+Contact: @email{mjldehoonx_AT_yahoo.com}@*
+
+Permission to use, copy, modify, and distribute this software and its
+documentation with or without modifications and for any purpose and
+without fee is hereby granted, provided that any copyright notices
+appear in all copies and that both those copyright notices and this
+permission notice appear in supporting documentation, and that the
+names of the contributors or copyright holders not be used in
+advertising or publicity pertaining to distribution of the software
+without specific prior permission.
+
+THE CONTRIBUTORS AND COPYRIGHT HOLDERS OF THIS SOFTWARE DISCLAIM ALL
+WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL THE
+CONTRIBUTORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY SPECIAL, INDIRECT
+OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE
+OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE
+OR PERFORMANCE OF THIS SOFTWARE.
+
+
+@end titlepage
+
+@contents
+
+@chapter Introduction
+
+Statistics for Python is an extension module, written in ANSI-C, for the Python scripting language. Currently, this extension module contains some routines to estimate the probability density function from a set of random variables.
+@*
+Statistics for Python was released under the Python License.
+
+@*
+@noindent @email{mdehoon_AT_c2b2.columbia.edu; mdehoon_AT_cal.berkeley.edu, Michiel de Hoon}@*
+Center for Computational Biology and Bioinformatics, Columbia University.
+
+@chapter Descriptive statistics
+
+Statistics for Python currently contains four functions for descriptive statistics: The mean, the median, the Pearson correlation, and a function to fit a linear regression line.
+
+@section Univariate descriptive statistics
+
+@noindent @cite{B. P. Welford: ``Note on a method for calculating corrected sums of squares and products.'' Technometrics 4(3): 419-420 (1962).} @*
+@noindent @cite{Peter M. Neely: ``Comparison of several algorithms for computation of means, standard deviations and correlation coefficients.'' Communications of the ACM 9(7): 496-499 (1966).} @*
+
+The arithmetic mean is defined as
+@tex
+$${\bar x} = {1 \over n} \sum_{i=1}^n x_i$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mover accent="false">
+    <mi>x</mi>
+    <mo>&OverBar;</mo>
+  </mover>
+  <mo>=</mo>
+  <mrow>
+    <mfrac>
+      <mn>1</mn>
+      <mi>n</mi>
+    </mfrac>
+    <munderover>
+      <mo>&sum;</mo>
+      <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+      <mi>n</mi>
+    </munderover>
+    <msub><mi>x</mi><mi>i</mi></msub>
+  </mrow>
+</math>
+@end html
+
+@noindent
+The statistical median of the data
+@tex
+$x_i$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msub><mi>x</mi><mi>i</mi></msub>
+</math>
+@end html
+ is defined as
+@tex
+$${\tilde x} = \left\{
+   \matrix{
+   x'_{\left(n+1\right)/2}, & \hbox{if $n$ is odd}; \cr
+   {1 \over 2} \left( x'_{n/2} + x'_{1+n/2}\right), & \hbox{if $n$ is even}. \cr
+  } \right.
+$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <mover accent="false">
+    <mi>x</mi>
+    <mo>&Tilde;</mo>
+  </mover>
+  <mo>=</mo>
+    <piecewise> 
+      <piece> 
+        <msub>
+          <mrow><mi>x</mi><mo>'</mo></mrow>
+          <mrow><mfenced><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow></mfenced><mo>/</mo><mn>2</mn></mrow>
+        </msub>
+        <mrow><mi>n</mi><mtext> &ThinSpace; is odd</mtext></mrow>
+      </piece> 
+      <piece> 
+        <mrow>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mfenced>
+            <mrow>
+              <msub>
+                <mrow><mi>x</mi><mo>'</mo></mrow>
+                <mrow><mi>n</mi><mo>/</mo><mn>2</mn></mrow>
+              </msub>
+              <mo>+</mo>
+              <msub>
+                <mrow><mi>x</mi><mo>'</mo></mrow>
+                <mrow><mn>1</mn><mo>+</mo><mi>n</mi><mo>/</mo><mn>2</mn></mrow>
+              </msub>
+            </mrow>
+          </mfenced>
+        </mrow>
+        <mrow><mi>n</mi><mtext> &ThinSpace; is even</mtext></mrow>
+      </piece> 
+    </piecewise> 
+</math>
+@end html
+where we find the array
+@tex
+$x'$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi><mo>'</mo>
+</math>
+@end html
+ by sorting the array
+@tex
+$x$.
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>.
+</math>
+@end html
+
+The variance in a random variable
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>
+@end html
+ is defined as
+@tex
+$$\sigma_x^2 = {\rm E} \left[\left(x-\mu_x\right)^2\right]$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <msubsup>
+    <mi>&sigma;</mi>
+    <mi>x</mi>
+    <mn>2</mn>
+  </msubsup>
+  <mo>=</mo>
+  <mo>E</mo>
+  <mo>&ApplyFunction;</mo>
+  <mfenced open='[' close = ']'>
+    <mrow>
+      <msup>
+        <mfenced>
+          <mrow>
+            <mi>x</mi>
+            <mo>-</mo>
+            <mo>E</mo><mo>&ApplyFunction;</mo><mfenced><mi>x</mi></mfenced>
+          </mrow>
+        </mfenced>
+        <mn>2</mn>
+      </msup>
+    </mrow>
+  </mfenced>
+</math>
+@end html
+Given
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi>
+</math>
+@end html
+ data of
+@tex
+$x$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>,
+</math>
+@end html
+ the unbiased estimate of the variance is
+@tex
+$$\mathaccent`^\sigma_x^2 = {1 \over {n-1}} \left[ \sum_{i=1}^n x_i^2 - {1 \over n} \left(\sum_{i=1}^n x_i\right)^2 \right] .$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msubsup>
+    <mover accent="true">
+      <mi>&sigma;</mi>
+      <mo>&Hat;</mo>
+    </mover>
+    <mi>x</mi>
+    <mn>2</mn>
+  </msubsup>
+  <mo>=</mo>
+  <mfrac>
+    <mn>1</mn>
+    <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
+  </mfrac>
+  <mfenced open='[' close=']'>
+    <mrow>
+      <mfenced>
+        <mrow>
+          <munderover>
+            <mo>&sum;</mo>
+            <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+            <mi>n</mi>
+          </munderover>
+          <msubsup><mi>x</mi><mi>i</mi><mn>2</mn></msubsup>
+        </mrow>
+      </mfenced>
+      <mo>-</mo>
+      <mfrac>
+        <mn>1</mn>
+        <mi>n</mi>
+      </mfrac>
+      <msup>
+        <mfenced>
+          <mrow>
+            <munderover>
+              <mo>&sum;</mo>
+              <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+              <mi>n</mi>
+            </munderover>
+            <msub><mi>x</mi><mi>i</mi></msub>
+          </mrow>
+        </mfenced>
+        <mn>2</mn>
+      </msup>
+    </mrow>
+  </mfenced>.
+</math>
+@end html
+For the maximum-likelihood estimate of the variance, which is a biased estimate, we divide by
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi>
+</math>
+@end html
+ instead of
+@tex
+$n-1.$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi><mo>-</mo><mn>1</mn>.
+</math>
+@end html
+
+The variance in this library is implemented using the algorithm proposed by Welford (1962), which avoids the round-off errors associated with a direct calculation of the variance.
+
+@section Multivariate descriptive statistics
+
+@noindent @cite{Ronald A. Fisher: ``Statistical Methods for Research Workers'', chapter VII. Oliver and Boyd, Edinburgh/London (1925).''}
+
+@subsection Covariance
+
+The covariance between two random variables
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>
+@end html
+ and
+@tex
+$y$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>y</mi>
+</math>
+@end html
+ is defined as
+@tex
+$$\sigma_{xy} = {\rm E} \left(\left(x-\mu_x\right)\left(y-\mu_y\right)\right)$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <msub>
+    <mi>&sigma;</mi>
+    <mrow><mi>x</mi><mi>y</mi></mrow>
+  </msub>
+  <mo>=</mo>
+  <mo>E</mo>
+  <mo>&ApplyFunction;</mo>
+  <mfenced open='[' close = ']'>
+    <mrow>
+      <mfenced>
+        <mrow>
+          <mi>x</mi>
+          <mo>-</mo>
+          <mo>E</mo><mo>&ApplyFunction;</mo><mfenced><mi>x</mi></mfenced>
+        </mrow>
+      </mfenced>
+      <mfenced>
+        <mrow>
+          <mi>y</mi>
+          <mo>-</mo>
+          <mo>E</mo><mo>&ApplyFunction;</mo><mfenced><mi>y</mi></mfenced>
+        </mrow>
+      </mfenced>
+    </mrow>
+  </mfenced>
+</math>
+@end html
+Given
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi>
+</math>
+@end html
+ paired data of
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>
+@end html
+ and
+@tex
+$y$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>y</mi>,
+</math>
+@end html
+ the unbiased estimate of their covariance is
+@tex
+$$\mathaccent`^\sigma_{xy} = {1 \over {n-1}} \left[ \sum_{i=1}^n x_i y_i - {1 \over n} \left(\sum_{i=1}^n x_i\right) \left(\sum_{i=1}^n y_i\right) \right] ;$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msub>
+    <mover accent="true">
+      <mi>&sigma;</mi>
+      <mo>&Hat;</mo>
+    </mover>
+    <mrow><mi>x</mi><mi>y</mi></mrow>
+  </msub>
+  <mo>=</mo>
+  <mfrac>
+    <mn>1</mn>
+    <mrow><mi>n</mi><mo>-</mo><mn>1</mn></mrow>
+  </mfrac>
+  <mfenced open='[' close=']'>
+    <mrow>
+      <mfenced>
+        <mrow>
+          <munderover>
+            <mo>&sum;</mo>
+            <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+            <mi>n</mi>
+          </munderover>
+          <mrow>
+            <msub><mi>x</mi><mi>i</mi></msub>
+            <msub><mi>y</mi><mi>i</mi></msub>
+          </mrow>
+        </mrow>
+      </mfenced>
+      <mo>-</mo>
+      <mfrac>
+        <mn>1</mn>
+        <mi>n</mi>
+      </mfrac>
+      <mfenced>
+        <mrow>
+          <munderover>
+            <mo>&sum;</mo>
+            <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+            <mi>n</mi>
+          </munderover>
+          <msub><mi>x</mi><mi>i</mi></msub>
+        </mrow>
+      </mfenced>
+      <mfenced>
+        <mrow>
+          <munderover>
+            <mo>&sum;</mo>
+            <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+            <mi>n</mi>
+          </munderover>
+          <msub><mi>y</mi><mi>i</mi></msub>
+        </mrow>
+      </mfenced>
+    </mrow>
+  </mfenced>;
+</math>
+@end html
+for the maximum-likelihood estimate of the covariance, which is a biased estimate, we divide by
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi>
+</math>
+@end html
+ instead of
+@tex
+$n-1.$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>n</mi><mo>-</mo><mn>1</mn>.
+</math>
+@end html
+
+The covariance is calculated using the algorithm proposed by Welford (1962) to avoid round-off errors.
+
+@subsection Correlation
+
+Statistics for Python includes the following correlation measures:
+@itemize @bullet
+@item Pearson correlation
+@item Spearman rank correlation
+@item Intraclass correlation
+@end itemize
+
+The Pearson correlation is calculated using the algorithm proposed by Welford (1962) to avoid round-off errors.
+
+The intraclass correlation follows the definition by Fisher:
+@tex
+$$r_{1,2} = {\sum_{i=1}^n \left( x_{i,1}-\bar x_{1,2}\right) \left( x_{i,2}-\bar x_{1,2}\right) \over {1 \over 2} {\sum_{i=1}^n \left( x_{i,1}-\bar x_{1,2}\right)^2}  + {1 \over 2} {\sum_{i=1}^n \left( x_{i,2}-\bar x_{1,2}\right)^2} }$$
+@end tex
+in which
+@tex
+$$\bar x_{1,2} = {1 \over 2} {\sum_{i=1}^n \left( x_{i,1}+ x_{i,2} \right)}$$
+@end tex
+To avoid round-off error, the intraclass correlation is calculated using a recursion formula similar to the Welford algorithm:
+@tex
+$$r_{1,2} = {N_{1,2}^{\left(n\right)} \over D_1^{\left(n\right)} + D_2^{\left(n\right)} + {n \over 4} \left(\bar{x}_1^{\left(n\right)} - \bar{x}_2^{\left(n\right)} \right)^2 }$$
+@end tex
+in which
+@tex
+$N_{1,2}^{\left(n\right)}$, $D_1^{\left(n\right)}$, $D_2^{\left(n\right)}$, $\bar{x}_1^{\left(n\right)}$, and $\bar{x}_2^{\left(n\right)}$
+@end tex
+are calculated from the recursion formulae
+@tex
+$$\bar{x}_1^{\left(j\right)} = {j - 1 \over j} \bar{x}_1^{\left(j-1\right)} + {1 \over j} x_{j,1}$$
+$$\bar{x}_2^{\left(j\right)} = {j - 1 \over j} \bar{x}_2^{\left(j-1\right)} + {1 \over j} x_{j,2}$$
+$$N_{1,2}^{\left(j\right)} = N_{1,2}^{\left(j-1\right)} + {j - 1 \over 4 j} \left(\bar{x}_1^{\left(j-1\right)} + \bar{x}_2^{\left(j-1\right)} - x_{j,1}  - x_{j,2}\right)^2 - {1 \over 4} \left(x_{j,1} - x_{j,2}\right)^2$$
+$$D_1^{\left(j\right)} = D_1^{\left(j-1\right)} + {j - 1 \over 2 j} \left(\bar{x}_1^{\left(j-1\right)} - x_{j,1}\right)^2$$
+$$D_2^{\left(j\right)} = D_2^{\left(j-1\right)} + {j - 1 \over 2 j} \left(\bar{x}_2^{\left(j-1\right)} - x_{j,2}\right)^2$$
+@end tex
+with
+@tex
+$N_{1,2}^{\left(0\right)} = D_1^{\left(0\right)} = D_2^{\left(0\right)} = \bar{x}_1^{\left(0\right)} = \bar{x}_2^{\left(0\right)} = 0$.
+@end tex
+
+@subsection Linear regression
+
+Calculate the intercept and slope of a linear regression line through a cloud of points.
+
+@section Usage
+
+@subsection Mean
+
+@noindent The function @code{mean} returns the arithmetic mean of an array of data. @*
+@code{>>> mean(x)} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+A one-dimensional array containing the data for which to calculate the mean.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item The arithmetic mean of the data @code{x}.
+@end itemize
+
+@subsection Median
+
+@noindent The function @code{median} returns the median of an array of data. @*
+@code{>>> median(x)} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+A one-dimensional array containing the data for which to calculate the median.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item The median of the data @code{x}.
+@end itemize
+
+@subsection Variance
+
+@noindent
+The function @code{variance} calculates the variance of a one-dimensional array of data. @*
+@code{>>> variance(x, mode = "Unbiased")} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+A one-dimensional array containing the data for which to calculate the variance;
+@item @code{mode} @*
+For @code{mode} equal to @code{Unbiased} (which is the default value), the function @code{variance} returns the unbiased estimate of the variance. For @code{mode} equal to @code{ML}, the function returns the maximum-likelihood estimate of the variance, which is a biased estimate.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item The variance in @code{x}.
+@end itemize
+
+@subsection Covariance
+
+@noindent
+The function @code{covariance} calculates the covariance matrix of an array of data. @*
+@code{>>> covariance(x, y = None, mode = "Unbiased")} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+Either a one-dimensional array or a two-dimensional array containing the data for which to calculate the covariance.
+@itemize @bullet
+@item If @code{x} is a one-dimensional array and @code{y==None}, then this function returns the variance of @code{x};
+@item If both @code{x} and @code{y} are one-dimensional arrays with the same length, @code{covariance} returns the covariance between @code{x} and @code{y};
+@item If @code{x} is a two-dimensional array, then @code{covariance} returns the covariance matrix of @code{x}; @code{y} is ignored.
+@end itemize
+@item @code{y} @*
+A one-dimensional array of the same length as @code{x}, or @code{None};
+@item @code{mode}
+For @code{mode} equal to @code{Unbiased} (which is the default value), the function @code{covariance} returns the unbiased estimate of the covariance. For @code{mode} equal to @code{ML}, the function returns the maximum-likelihood estimate of the covariance, which is a biased estimate.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item If @code{x} is one-dimensional and @code{y==None}: the variance in @code{x};
+@item If @code{x} and @code{y} are both one-dimensional and have the same length: the covariance between @code{x} and @code{y};
+@item If @code{x} is two-dimensional: the covariance matrix between the columns of @code{x}. Element @code{[i,j]} of the covariance matrix contains the covariance between columns @code{x[:,i]} and @code{x[:,j]}.
+@end itemize
+
+@subsection Correlation
+
+@noindent
+The function @code{correlation} calculates the correlation matrix of an array of data. @*
+@code{>>> correlation(x, y = None, method = "Pearson")} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+Either a one-dimensional array or a two-dimensional array containing the data for which to calculate the correlation.
+@itemize @bullet
+@item If @code{x} is a one-dimensional array and @code{y==None}, then this function returns @code{1.0};
+@item If both @code{x} and @code{y} are one-dimensional arrays with the same length, @code{correlation} returns the correlation between @code{x} and @code{y};
+@item If @code{x} is a two-dimensional array, then @code{correlation} returns the correlation matrix of @code{x}; @code{y} is ignored.
+@end itemize
+@item @code{y} @*
+A one-dimensional array of the same length as @code{x}, or @code{None};
+@item @code{method}
+Determines which type of correlation is calculated:
+@itemize @bullet
+@item @code{"Pearson"}: The Pearson correlation (default);
+@item @code{"Spearman"}: The Spearman rank correlation;
+@item @code{"Intraclass"}: The intraclass correlation.
+@end itemize
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item If @code{x} is one-dimensional and @code{y==None}: @code{1.0};
+@item If @code{x} and @code{y} are both one-dimensional and have the same length: the correlation between @code{x} and @code{y};
+@item If @code{x} is two-dimensional: the correlation matrix between the columns of @code{x}. Element @code{[i,j]} of the correlation matrix contains the correlation between columns @code{x[:,i]} and @code{x[:,j]}.
+@end itemize
+
+@subsection Linear regression
+
+@noindent The function @code{regression} returns the intercept and slope of a linear regression line fit to two arrays @code{x} and @code{y}. @*
+@code{>>> a, b = regression(x,y)} @*
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{x} @*
+A one-dimensional array of data;
+@item @code{y} @*
+A one-dimensional array of data.
+@end itemize
+The size of @code{x} and @code{y} should be equal.
+
+@subsubheading Return values
+@itemize @bullet
+@item @code{a} @*
+The intercept of the linear regression line;
+@item @code{b} @*
+The slope of the linear regression line.
+@end itemize
+
+@chapter Kernel estimation of probability density functions
+
+
+@noindent @cite{B. W. Silverman: ``Density Estimation for Statistics and Data Analysis'', Chapter 3. Chapman and Hall, New York, 1986.} @*
+@noindent @cite{D. W. Scott: ``Multivariate Density Estimation; Theory, Practice, and Visualization'', Chapter 6. John Wiley and Sons, New York, 1992.}
+
+@sp 1
+
+@noindent Suppose we have a set of observations
+@tex
+$x_i$, 
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msub>
+    <mi>x</mi>
+    <mi>i</mi>
+  </msub>
+</math>, 
+@end html
+ and we want to find the probability density function of the distribution from which these data were drawn. In parametric density estimations, we choose some distribution (such as the normal distribution or the extreme value distribution) and estimate the values of the parameters appearing in these functions from the observed data. However, often the functional form of the true density function is not known. In this case, the probability density function can be estimated non-parametrically by using a kernel density estimation.
+
+@section Kernel estimation of the density function
+
+@noindent Histograms are commonly used to represent a statistical distribution. To calculate a histogram, we divide the data into bins of size
+@tex
+$2h$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mn>2</mn>
+  <mi>h</mi>
+</math>, 
+@end html
+ and count the number of data in each bin. Formally, we can write this as
+@tex
+$$\mathaccent`^f\left(x\right) = {1 \over n h} \sum_{i=1}^n k \left({x-x_i} \over {h}\right),$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mover accent="true">
+    <mi>f</mi>
+    <mo>&Hat;</mo>
+  </mover>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+  <mo>=</mo>
+  <mrow>
+    <mfrac>
+      <mn>1</mn>
+      <mrow><mi>n</mi><mi>h</mi></mrow>
+    </mfrac>
+    <munderover>
+      <mo>&sum;</mo>
+      <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+      <mi>n</mi>
+    </munderover>
+    <mi>k</mi>
+    <mo>&ApplyFunction;</mo>
+    <mrow>
+      <mfenced>
+        <mfrac>
+          <mrow><mi>x</mi><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow>
+          <mi>h</mi>
+        </mfrac>
+      </mfenced>
+    </mrow>
+  </mrow>
+</math>
+@end html
+where the function
+@tex
+$k$ 
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>k</mi>
+</math>
+@end html
+ is defined by
+@tex
+$$k\left(t\right) = \left\{
+   \matrix{
+   {1 \over 2}, & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1, \cr
+  } \right.
+$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <mfrac><mn>1</mn><mn>2</mn></mfrac> 
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>x</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece> 
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>x</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+and
+@tex
+$h$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>h</mi>
+</math>
+@end html
+ is called the bandwidth, smoothing parameter, or window width.
+Here, the probability density is estimated for a given value of
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>
+@end html
+ which corresponds to the center of each bin in the histogram. More generally, by varying
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>
+@end html
+ we can estimate the probability density function
+@tex
+$f\left(x\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>f</mi>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>
+@end html
+ as a function of
+@tex
+$x$.
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>x</mi>
+</math>.
+@end html
+
+Using the kernel function
+@tex
+$k$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>k</mi>
+</math>
+@end html
+ as defined above yields the na@"{@dotless{i}}ve estimator of the probability density function. As the kernel function is not continuous, the na@"{@dotless{i}}ve estimator tends to produce jagged probability density functions. Hence, we replace the flat-top kernel function by some smooth (and usually symmetric and non-negative) function. In order to guarantee that the estimated density function integrates to unity, we also require
+@tex
+$$\int_{-\infty}^{\infty}k\left(t\right) dt = 1.$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <apply>
+    <eq/>
+      <apply> 
+        <int/> 
+        <bvar> 
+          <ci>t</ci> 
+        </bvar> 
+        <lowlimit> 
+          <apply>
+            <minus/>
+            <infinity/>
+          </apply>
+        </lowlimit> 
+        <uplimit> 
+          <infinity/>
+        </uplimit> 
+        <apply>
+          <fn>
+            <ci>k</ci>
+          </fn>
+          <ci>t</ci>
+        </apply>
+      </apply> 
+    <cn>1</cn>
+  </apply>
+</math>
+@end html
+Some commonly used kernel functions are listed in the table below. The Epanechnikov kernel is used by default, as it can (theoretically) minimize the mean integrated square error of the estimation. In practice, there is little difference in the integrated square error between probability density functions estimated with different kernels, and it may be worthwhile to choose a different kernel based on other considerations, such as differentiability.
+
+@float ,
+@multitable @columnfractions 0.14 0.24 0.40 0.22
+@item Mnemonic @tab Kernel name @tab Function @tab Optimal bandwidth
+@tex
+$h$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>h</mi>
+</math>
+@end html
+@item @code{'u'} @tab Uniform @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   {1 \over 2}, & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <mfrac><mn>1</mn><mn>2</mn></mfrac> 
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece> 
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({12\sqrt{\pi}} \over {n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><mn>12</mn><msqrt><mi>&pi;</mi></msqrt></mrow>
+        <mi>n</mi>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'t'} @tab Triangle @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   1-\left|t\right|, & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <apply> 
+          <minus/>
+          <cn>1</cn>
+          <apply><abs/><ci>t</ci></apply> 
+        </apply>
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece>
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({64\sqrt{\pi}} \over {n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><mn>64</mn><msqrt><mi>&pi;</mi></msqrt></mrow>
+        <mi>n</mi>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'e'} @tab Epanechnikov @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   {3 \over 4} \left(1-t^2\right), & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <apply> 
+          <times/>
+          <mfrac><mn>3</mn><mn>4</mn></mfrac>
+          <mfenced>
+            <mrow><mn>1</mn><mo>-</mo><msup><mi>t</mi><mn>2</mn></msup></mrow>
+          </mfenced>
+        </apply>
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece>
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({40\sqrt{\pi}} \over {n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><mn>40</mn><msqrt><mi>&pi;</mi></msqrt></mrow>
+        <mi>n</mi>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'b'} @tab Biweight/quartic @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   {15 \over 16} \left(1-t^2\right)^2, & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <apply> 
+          <times/>
+          <mfrac><mn>15</mn><mn>16</mn></mfrac>
+          <msup>
+            <mfenced>
+              <mrow><mn>1</mn><mo>-</mo><msup><mi>t</mi><mn>2</mn></msup></mrow>
+            </mfenced>
+            <mn>2</mn>
+          </msup>
+        </apply>
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece>
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({280 \sqrt{\pi}} \over {3 n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><mn>280</mn><msqrt><mi>&pi;</mi></msqrt></mrow>
+        <mrow><mn>3</mn><mi>n</mi></mrow>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'3'} @tab Triweight @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   {35 \over 32} \left(1-t^2\right)^3, & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <apply> 
+          <times/>
+          <mfrac><mn>35</mn><mn>32</mn></mfrac>
+          <msup>
+            <mfenced>
+              <mrow><mn>1</mn><mo>-</mo><msup><mi>t</mi><mn>2</mn></msup></mrow>
+            </mfenced>
+            <mn>3</mn>
+          </msup>
+        </apply>
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece>
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({25200 \sqrt{\pi}} \over {143 n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><mn>25200</mn><msqrt><mi>&pi;</mi></msqrt></mrow>
+        <mrow><mn>143</mn><mi>n</mi></mrow>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'c'} @tab Cosine @tab
+@tex
+$k\left(t\right) = \left\{
+   \matrix{
+   {\pi \over 4} \cos \left({\pi \over 2}t\right), & \left|t\right| \leq 1; \cr
+   0, & \left|t\right| > 1. \cr
+  } \right.
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <piecewise> 
+      <piece> 
+        <apply> 
+          <times/>
+          <mfrac><mi>&pi;</mi><mn>4</mn></mfrac>
+          <apply>
+            <fn>
+              <mo>cos</mo>
+            </fn>
+            <mrow><mfrac><mi>&pi;</mi><mn>2</mn></mfrac><mi>t</mi></mrow>
+          </apply>
+        </apply>
+        <apply> 
+          <leq/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+      <piece>
+        <mn>0</mn>
+        <apply> 
+          <gt/> 
+          <apply><abs/><ci>t</ci></apply> 
+          <cn>1</cn> 
+        </apply> 
+      </piece> 
+    </piecewise> 
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left({\pi^{13/2}} \over {6 n \left(\pi^2-8\right)^2}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mrow><msup><mi>&pi;</mi><mfrac><mn>13</mn><mn>2</mn></mfrac></msup></mrow>
+        <mrow>
+          <mn>6</mn><mi>n</mi>
+          <msup>
+            <mfenced>
+              <mrow>
+                <msup><mi>&pi;</mi><mn>2</mn></msup><mo>-</mo><mn>8</mn>
+              </mrow>
+            </mfenced>
+            <mn>2</mn>
+          </msup>
+        </mrow>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@item @code{'g'} @tab Gaussian @tab
+@tex
+$k\left(t\right) =
+   {1 \over \sqrt{2\pi}} \exp \left(-{1 \over 2}t^2\right)
+$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <apply>
+    <eq/>
+    <apply>
+      <fn>
+        <ci>k</ci>
+      </fn>
+      <ci>t</ci>
+    </apply>
+    <apply> 
+      <times/>
+      <mfrac><mn>1</mn><msqrt><mn>2</mn><mi>&pi;</mi></msqrt></mfrac>
+      <mo>exp</mo>
+        <mfenced>
+          <mrow>
+            <mo>-</mo><mfrac><mn>1</mn><mn>2</mn></mfrac>
+            <msup><mi>t</mi><mn>2</mn></msup>
+          </mrow>
+        </mfenced>
+    </apply>
+  </apply>
+</math>
+@end html
+@tab
+@tex
+$\sigma \left(4 \over {3 n}\right)^{1 \over 5}$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>&sigma;</mi>
+  <msup>
+    <mfenced>
+      <mfrac>
+        <mn>4</mn>
+        <mrow><mn>3</mn><mi>n</mi></mrow>
+      </mfrac>
+    </mfenced>
+    <mrow><mfrac><mn>1</mn><mn>5</mn></mfrac></mrow>
+  </msup>
+</math>
+@end html
+@end multitable
+@end float
+@*
+Estimating the probability density function with the Gaussian kernel is more computationally intensive than with other kernels, as it has infinite support (i.e.,
+@tex
+$k\left(t\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>k</mi>
+  <mo>&ApplyFunction;</mo>
+  <mrow>
+    <mfenced><mi>t</mi></mfenced>
+  </mrow>
+</math>
+@end html
+ is nonzero for all
+@tex
+$t$).
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>t</mi>
+</math>).
+@end html
+
+@section Kernel estimation of the cumulative probability density
+
+@noindent By integrating the estimated probability density function, we obtain an estimate for the cumulative density function
+@tex
+$F\left(x\right)$:
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>F</mi>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>:
+@end html
+@tex
+$$\mathaccent`^F\left(x\right) = \int_{-\infty}^x \mathaccent`^f\left(t\right) dt = {1 \over n} \sum_{i=1}^n K \left({x-x_i} \over {h}\right),$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <mover accent="true">
+    <mi>F</mi>
+    <mo>&Hat;</mo>
+  </mover>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+  <mo>=</mo>
+  <apply> 
+    <int/> 
+    <bvar> 
+      <ci>t</ci> 
+    </bvar> 
+    <lowlimit> 
+      <apply>
+        <minus/>
+        <infinity/>
+      </apply>
+    </lowlimit> 
+    <uplimit> 
+      <ci>x</ci>
+    </uplimit>
+    <mrow>
+      <mover accent="true">
+        <mi>f</mi>
+        <mo>&Hat;</mo>
+      </mover>
+      <mo>&ApplyFunction;</mo>
+      <mfenced><mi>t</mi></mfenced>
+    </mrow>
+  </apply> 
+  <mo>=</mo>
+  <mrow>
+    <mfrac>
+      <mn>1</mn>
+      <mi>n</mi>
+    </mfrac>
+    <munderover>
+      <mo>&sum;</mo>
+      <mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow>
+      <mi>n</mi>
+    </munderover>
+    <mi>K</mi>
+    <mo>&ApplyFunction;</mo>
+    <mfenced>
+      <mfrac>
+        <mrow><mi>x</mi><mo>-</mo><msub><mi>x</mi><mi>i</mi></msub></mrow>
+        <mi>h</mi>
+      </mfrac>
+    </mfenced>
+  </mrow>,
+</math>
+@end html
+where
+@tex
+$K$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>K</mi>
+</math>
+@end html
+ is defined as the primitive of the kernel function 
+@tex
+$k$:
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>k</mi>
+</math>:
+@end html
+@tex
+$$K\left(x\right) \equiv \int_{-\infty}^x k\left(t\right) dt.$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <mi>K</mi>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+  <mo>&equiv;</mo>
+  <apply> 
+    <int/> 
+    <bvar> 
+      <ci>t</ci> 
+    </bvar> 
+    <lowlimit> 
+      <apply>
+        <minus/>
+        <infinity/>
+      </apply>
+    </lowlimit> 
+    <uplimit> 
+      <ci>x</ci>
+    </uplimit>
+    <mrow>
+      <mi>k</mi>
+      <mo>&ApplyFunction;</mo>
+      <mrow>
+        <mfenced><mi>t</mi></mfenced>
+      </mrow>
+    </mrow>
+  </apply> 
+</math>
+@end html
+This software package contains a Python function to calculate this estimate directly from a set of data, as well as a function to estimate the complementary cumulative probability density, defined as 
+@tex
+$$F'\left(x\right) \equiv 1 - F\left(x\right).$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"> 
+  <msup>
+    <mi>F</mi>
+    <mo>'</mo>
+  </msup>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+  <mo>&equiv;</mo>
+  <mn>1</mn>
+  <mo>-</mo>
+  <mi>F</mi>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>
+@end html
+The complementary cumulative probability density
+@tex
+$F'\left(x\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <msup>
+    <mi>F</mi>
+    <mo>'</mo>
+  </msup>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>
+@end html
+ can be interpreted as the tail probability
+@tex
+$p$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>p</mi>
+</math>
+@end html
+ of the random variable to be equal to or larger than
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ assuming that it is drawn from the distribution described by
+@tex
+$f$.
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>f</mi>
+</math>.
+@end html
+
+@section Choosing the bandwidth
+
+@noindent The bandwidth
+@tex
+$h$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>h</mi>
+</math>
+@end html
+ determines how smooth the estimated probability density function will be: A larger value for
+@tex
+$h$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>h</mi>
+</math>
+@end html
+ leads to a smoother probability density function, as it is averaged over more data points. Often, a suitable bandwith can be chosen subjectively based on the application at hand. Alternatively, we may choose the bandwidth such that it minimizes the asymptotic mean integrated square error. This optimal bandwidth depends on the number of observations
+@tex
+$n$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>n</mi>
+</math>,
+@end html
+ the standard deviation
+@tex
+$\sigma$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>&sigma;</mi>
+</math>
+@end html
+ of the observed data, and the kernel function. The formulas for the optimal bandwidth are given in the table above. To make things easy, this software package contains a Python function to calculate the optimal bandwidth from the data.
+
+@section Usage
+
+@subsection Estimating the probability density function
+
+@noindent The function @code{pdf} estimates the probability density function from the observed data. You can either specify the values of @code{x} at which you want to estimate the value @code{y} of the probability density function explicitly: @*
+@code{>>> y = pdf(data, x, weight = None, h = None, kernel = 'Epanechnikov')} @*
+or you can let the function choose @code{x} for you: @*
+@code{>>> y, x = pdf(data, weight = None, h = None, kernel = 'Epanechnikov', n = 100)} @*
+In the latter case, the returned array @code{x} contains @code{n} equidistant data points covering the domain where
+@tex
+$\mathaccent`^f\left(x\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mover accent="true">
+    <mi>f</mi>
+    <mo>&Hat;</mo>
+  </mover>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>
+@end html
+ is nonzero.
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{data} @*
+The one-dimensional array data contains the observed data from which the probability density function is estimated;
+@item @code{weight} @*
+The one-dimensional array weight, if given, contains the weights for the observed data. If @code{weight==None}, then each data point receives an equal weight 1.
+@item @code{x} @*
+The value(s) at which the probability density function will be estimated (either a single value, or a 1D array of values). If you don't specify @code{x}, the function @code{pdf} will create @code{x} as a 1D array of @code{n} values for you and return it together with the estimated probability density function;
+@item @code{h} @*
+The bandwidth to be used for the estimation. If @code{h} is not specified (and also if the user specifies a zero or negative @code{h}), the optimal bandwidth is used (which can be calculated explicitly by the function @code{bandwidth});
+@item @code{kernel} @*
+The kernel function can be specified by its name (case is ignored), or by a one-character mnemonic:
+@table @asis
+@item @code{'E'} or @code{'Epanechnikov'}
+Epanechnikov kernel (default)
+@item @code{'U'} or @code{'Uniform'}
+Uniform kernel
+@item @code{'T'} or @code{'Triangle'}
+Triangle kernel
+@item @code{'G'} or @code{ 'Gaussian'}
+Gaussian kernel
+@item @code{'B'} or @code{'Biweight'}
+Quartic/biweight kernel
+@item @code{'3'} or @code{'Triweight'}
+Triweight kernel
+@item @code{'C'} or @code{'Cosine'}
+Cosine kernel
+@end table
+@item @code{n} @*
+The number of points for which the probability density function is to be estimated. This argument is meaningful only if you don't specify @code{x} explicitly; passing both @code{x} and @code{n} raises an error. Default value of @code{n} is 100.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item If you specified @code{x} explicitly: The estimated probability density, estimated at at the values in @code{x};
+@item If you did not specify @code{x} explicitly: The estimated probability density, as well as the corresponding values of @code{x}.
+@end itemize
+
+@subsection Estimating the cumulative probability density function
+
+@noindent The function @code{cpdf} estimates the cumulative probability density function from the observed data. You can either specify the values of @code{x} at which you want to estimate the value @code{y} of the cumulative probability density function explicitly: @*
+@code{>>> y = cpdf(data, x, h = None, kernel = 'Epanechnikov')} @*
+or you can let the function choose @code{x} for you: @*
+@code{>>> y, x = cpdf(data, h = None, kernel = 'Epanechnikov', n = 100)} @*
+In the latter case, the returned array @code{x} contains @code{n} equidistant data points covering the domain where
+@tex
+$\mathaccent`^f\left(x\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mover accent="true">
+    <mi>f</mi>
+    <mo>&Hat;</mo>
+  </mover>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+</math>
+@end html
+ is nonzero; the estimated cumulative probability density is constant (either 0 or 1) outside of this domain.
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{data} @*
+The one-dimensional array data contains the observed data from which the cumulative probability density function is estimated;
+@item @code{x} @*
+The value(s) at which the cumulative probability density function will be estimated (either a single value, or a 1D array of values). If you don't specify @code{x}, the function @code{cpdf} will create @code{x} as a 1D array of @code{n} values for you and return it together with the estimated cumulative probability density function.
+@item @code{h} @*
+The bandwidth to be used for the estimation. If @code{h} is not specified (and also if the user specifies a zero or negative @code{h}), the optimal bandwidth is used (which can be calculated explicitly by the function @code{bandwidth}).
+@item @code{kernel} @*
+The kernel function can be specified by its name (case is ignored), or by a one-character mnemonic:
+@table @asis
+@item @code{'E'} or @code{'Epanechnikov'}
+Epanechnikov kernel (default)
+@item @code{'U'} or @code{'Uniform'}
+Uniform kernel
+@item @code{'T'} or @code{'Triangle'}
+Triangle kernel
+@item @code{'G'} or @code{ 'Gaussian'}
+Gaussian kernel
+@item @code{'B'} or @code{'Biweight'}
+Quartic/biweight kernel
+@item @code{'3'} or @code{'Triweight'}
+Triweight kernel
+@item @code{'C'} or @code{'Cosine'}
+Cosine kernel
+@end table
+@item @code{n} @*
+The number of points for which the cumulative probability density function is to be estimated. This argument is meaningful only if you don't specify @code{x} explicitly; passing both @code{x} and @code{n} raises an error. Default value of @code{n} is 100.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item If you specified @code{x} explicitly: The estimated cumulative probability density, estimated at at the values in @code{x};
+@item If you did not specify @code{x} explicitly: The estimated cumulative probability density, as well as the corresponding values of @code{x}.
+@end itemize
+
+@subsection Estimating the complement of the cumulative probability density function
+
+@noindent The function @code{cpdfc} estimates the complement of the cumulative probability density function from the observed data. You can either specify the values of @code{x} at which you want to estimate the value @code{y} of the complement of the cumulative probability density function explicitly: @*
+@code{>>> y = cpdfc(data, x, h = None, kernel = 'Epanechnikov')} @*
+or you can let the function choose @code{x} for you: @*
+@code{>>> y, x = cpdfc(data, h = None, kernel = 'Epanechnikov', n = 100)} @*
+In the latter case, the returned array @code{x} contains @code{n} equidistant data points covering the domain where
+@tex
+$\mathaccent`^f\left(x\right)$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mover accent="true">
+    <mi>f</mi>
+    <mo>&Hat;</mo>
+  </mover>
+  <mo>&ApplyFunction;</mo>
+  <mfenced>
+    <mi>x</mi>
+  </mfenced>
+</math>
+@end html
+ is nonzero; the estimated complement of the cumulative probability density is constant (either 0 or 1) outside of this domain.
+
+@subsubheading Arguments
+
+@itemize @bullet
+@item @code{data} @*
+The one-dimensional array data contains the observed data from which the complement of the cumulative probability density function is estimated.
+@item @code{x} @*
+The value(s) at which the complement of the cumulative probability density function will be estimated (either a single value, or a 1D array of values). If you don't specify @code{x}, the function @code{cpdfc} will create @code{x} as a 1D array of @code{n} values for you and return it together with the estimated complement of the cumulative probability density function.
+@item @code{h} @*
+The bandwidth to be used for the estimation. If @code{h} is not specified (and also if the user specifies a zero or negative @code{h}), the optimal bandwidth is used (which can be calculated explicitly by the function @code{bandwidth}).
+@item @code{kernel} @*
+The kernel function can be specified by its name (case is ignored), or by a one-character mnemonic:
+@table @asis
+@item @code{'E'} or @code{'Epanechnikov'}
+Epanechnikov kernel (default)
+@item @code{'U'} or @code{'Uniform'}
+Uniform kernel
+@item @code{'T'} or @code{'Triangle'}
+Triangle kernel
+@item @code{'G'} or @code{ 'Gaussian'}
+Gaussian kernel
+@item @code{'B'} or @code{'Biweight'}
+Quartic/biweight kernel
+@item @code{'3'} or @code{'Triweight'}
+Triweight kernel
+@item @code{'C'} or @code{'Cosine'}
+Cosine kernel
+@end table
+@item @code{n} @*
+The number of points for which the complement of the cumulative probability density function is to be estimated. This argument is meaningful only if you don't specify @code{x} explicitly; passing both @code{x} and @code{n} raises an error. Default value of @code{n} is 100.
+@end itemize
+
+@subsubheading Return values
+@itemize @bullet
+@item If you specified @code{x} explicitly: The estimated cumulative probability density, estimated at at the values in @code{x};
+@item If you did not specify @code{x} explicitly: The estimated cumulative probability density, as well as the corresponding values of @code{x}.
+@end itemize
+@subsection Calculating the optimal bandwidth
+
+@noindent The function @code{bandwidth} calculates the optimal bandwidth from the observed data for a given kernel: @*
+@code{>>> h = bandwidth(data, weight=None, kernel='Epanechnikov')}
+
+@subsubheading Arguments
+@itemize @bullet
+@item @code{data} @*
+A one-dimensional array data contains the observed data from which the probability density function will be calculated;
+@item @code{weight} @*
+The one-dimensional array weight, if given, contains the weights for the observed data. If @code{weight==None}, then each data point receives an equal weight 1.
+@item @code{kernel} @*
+The kernel function can be specified by its name (case is ignored), or by a one-character mnemonic:
+@table @asis
+@item @code{'E'} or @code{'Epanechnikov'}
+Epanechnikov kernel (default)
+@item @code{'U'} or @code{'Uniform'}
+Uniform kernel
+@item @code{'T'} or @code{'Triangle'}
+Triangle kernel
+@item @code{'G'} or @code{ 'Gaussian'}
+Gaussian kernel
+@item @code{'B'} or @code{'Biweight'}
+Quartic/biweight kernel
+@item @code{'3'} or @code{'Triweight'}
+Triweight kernel
+@item @code{'C'} or @code{'Cosine'}
+Cosine kernel
+@end table
+@end itemize
+
+@subsubheading Return value
+@noindent The function @code{bandwidth} returns the optimal bandwidth for the given @code{data}, using the specified @code{kernel}. This bandwidth can subsequently be used when estimating the (cumulative) probability density with @code{pdf}, @code{cpdf}, or @code{cpdfc}.
+
+@page
+
+@section Examples
+
+@subsection Estimating a probability density function
+
+We use Numerical Python's @code{random} module to draw 100 random numbers from a standard normal distribution. @*
+
+@code{>>> from numpy.random import standard_normal} @*
+@code{>>> data = standard_normal(100)} @*
+We estimate the probability density function, using the default Epanechnikov kernel and the default value for the bandwidth: @*
+@code{>>> import statistics} @*
+@code{>>> y, x = statistics.pdf(data)} @*
+The estimated probability function @code{y} as a function of @code{x} is drawn below (figure created by Pygist). @*
+@image{figure1,,,,png} @*
+
+@page
+
+Similarly, we can estimate the cumulative probability density distribution: @*
+
+@code{>>> y, x = statistics.pdf(data)} @*
+@image{figure2,,,,png} @*
+
+@subsection Choosing the kernel and bandwidth
+
+We now use Numerical Python's @code{random} module to generate 20000 random numbers from a distribution consisting of two Gaussians, one centered around -3 and one centered around 3, both with a standard deviation equal to unity. @*
+
+@code{>>> from numpy.random import standard_normal, randint} @*
+@code{>>> n = 20000} @*
+@code{>>> data = standard_normal(n) + 3.0*(randint(0,2,n)-0.5)} @*
+Next, we estimate the probability density function, using the Epanechnikov kernel and the default value for the bandwidth: @*
+@code{>>> import statistics} @*
+@code{>>> y, x = statistics.pdf(data)} @*
+@image{figure3,,,,png} @*
+@page
+The choice of kernel function usually has a minor effect on the estimated probability density function: @*
+@code{>>> y, x = statistics.pdf(data, kernel="Gaussian")} @*
+@image{figure4,,,,png} @*
+@page
+Now, let's find out the default value for the bandwidth was: @*
+@code{>>> statistics.bandwidth(data)} @*
+@code{0.58133427540755089} @*
+Choosing a bandwidth much smaller than the default value results in overfitting: @*
+@code{>>> y, x = statistics.pdf(data, h = 0.58133427540755089/10)} @*
+@image{figure5,,,,png} @*
+@page
+Choosing a bandwidth much larger than the default value results in oversmoothing: @*
+@code{>>> y, x = statistics.pdf(data, h = 0.58133427540755089*4)} @*
+@image{figure6,,,,png} @*
+
+@page
+
+@subsection Approaching the extreme value distribution
+
+Suppose we generate
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>
+</math>
+@end html
+ random numbers
+@tex
+$u$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>u</mi>
+</math>
+@end html
+ from a standard normal distribution, and define
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ the maximum of these
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>
+</math>
+@end html
+ numbers. By repeating this
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>n</mi>
+</math>
+@end html
+ times, we obtain
+@tex
+$n$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>n</mi>
+</math>
+@end html
+ random numbers whose distribution, for
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>
+</math>
+@end html
+ large, approaches the extreme value distribution.
+
+Given that the random numbers
+@tex
+$u$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>u</mi>
+</math>
+@end html
+ are drawn from a standard normal distribution, we can calculate the distribution of 
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ analytically:
+@tex
+$$f_m\left(x\right) = {m \over \sqrt{2 \pi}} \left({1 \over 2} - {1 \over 2} {\mathop {\rm erf}}\left(x \over \sqrt{2}\right)\right)^{m-1} \exp\left(-{1 \over 2}x^2\right)$$.
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msub>
+    <mi>f</mi>
+    <mi>m</mi>
+  </msub>
+  <mo>&ApplyFunction;</mo>
+  <mfenced><mi>x</mi></mfenced>
+  <mo>=</mo>
+  <mrow>
+    <mfrac>
+      <mi>m</mi>
+      <msqrt><mn>2</mn><mi>&pi;</mi></msqrt>
+    </mfrac>
+    <msup>
+      <mfenced>
+        <mrow>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mo>-</mo>
+          <mfrac><mn>1</mn><mn>2</mn></mfrac>
+          <mo>erf</mo>
+          <mo>&ApplyFunction;</mo>
+          <mfenced><mfrac><mi>x</mi><msqrt>2</msqrt></mfrac></mfenced>
+        </mrow>
+      </mfenced>
+      <mrow><mi>m</mi><mo>-</mo><mn>1</mn></mrow>
+    </msup>
+    <mo>exp</mo>
+    <mo>&ApplyFunction;</mo>
+    <mfenced>
+      <mrow>
+        <mo>-</mo>
+        <mfrac><msup><mi>x</mi><mn>2</mn></msup><mn>2</mn></mfrac>
+      </mrow>
+    </mfenced>
+  </mrow>
+</math>
+@end html
+However, in general the distribution of
+@tex
+$u$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>u</mi>
+</math>,
+@end html
+ and therefore 
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>,
+@end html
+ is unknown, except that for
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>
+</math>
+@end html
+ large we can approximate the distribution of
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ by an extreme value distribution:
+@tex
+$$f_{a,b}\left(x\right) = {1 \over b} \exp\left({{a-x} \over b} - \exp\left({{a-x} \over b}\right)\right),$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msub>
+    <mi>f</mi>
+    <mrow><mi>a</mi><mo>,</mo><mi>b</mi></mrow>
+  </msub>
+  <mo>&ApplyFunction;</mo>
+  <mfenced>
+    <mi>x</mi>
+  </mfenced>
+  <mo>=</mo>
+  <mrow>
+    <mfrac>
+      <mn>1</mn>
+      <mi>b</mi>
+    </mfrac>
+    <mo>exp</mo>
+    <mo>&ApplyFunction;</mo>
+    <mfenced>
+      <mrow>
+        <mfrac>
+          <mrow><mi>a</mi><mo>-</mo><mi>x</mi></mrow>
+          <mi>b</mi>
+        </mfrac>
+        <mo>-</mo>
+        <mo>exp</mo>
+        <mo>&ApplyFunction;</mo>
+        <mfenced>
+          <mfrac>
+            <mrow><mi>a</mi><mo>-</mo><mi>x</mi></mrow>
+            <mi>b</mi>
+          </mfrac>
+        </mfenced>
+      </mrow>
+    </mfenced>
+  </mrow>,
+</math>
+@end html
+ where
+@tex
+$a$ and $b$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>a</mi>
+</math>
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>b</mi>
+</math>
+@end html
+ are estimated from the mean and variance of
+@tex
+$x$:
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>:
+</math>
+@end html
+@tex
+$$\mu = a + b \gamma;$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <mi>&mu;</mi>
+  <mo>=</mo>
+  <mi>a</mi>
+  <mo>+</mo>
+  <mi>b</mi>
+  <mi>&gamma;</mi>;
+</math>
+@end html
+@tex
+$$\sigma^2 = {1 \over 6} \pi^2  b^2,$$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block">
+  <msup>
+    <mi>&sigma;</mi>
+    <mn>2</mn>
+  </msup>
+  <mo>=</mo>
+  <mfrac><mn>1</mn><mn>6</mn></mfrac>
+  <msup>
+    <mi>&pi;</mi>
+    <mn>2</mn>
+  </msup>
+  <msup>
+    <mi>b</mi>
+    <mn>2</mn>
+  </msup>,
+</math>
+@end html
+ where
+@tex
+$\gamma \approx 0.577216$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>&gamma;</mi>
+  <mo>&approx;</mo>
+  <mn>0.577216</mn>
+</math>
+@end html
+ is the Euler-Mascheroni constant. @*
+
+Here, we generate
+@tex
+$n = 1000$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>n</mi><mo>=</mo><mn>1000</mn>
+</math>
+@end html
+ random numbers
+@tex
+$x$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>,
+</math>
+@end html
+ for increasing values of
+@tex
+$m$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>,
+</math>
+@end html
+ and approximate the distribution of
+@tex
+$x$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ by a normal distribution, an extreme value distribution, and by the kernel-based estimate. @*
+
+@noindent @code{>>> import statistics} @*
+@code{>>> from numpy.random import standard_normal} @*
+@code{>>> n = 1000} @*
+@code{>>> m = 1} @*
+@code{>>> data = array([max(standard_normal(m)) for i in range(n)])} @*
+@code{>>> y, x = statistics.pdf(data)} @*
+
+The estimated probability density, together with the analytically determined probability density, a normal distribution, and the extreme value distribution are drawn in the figures below for increasing values of
+@tex
+$m$.
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>.
+</math>
+@end html
+
+@page
+
+@image{figure7,,,,png} @*
+
+@page
+
+@image{figure8,,,,png} @*
+
+@page
+
+@image{figure9,,,,png} @*
+
+For the standard normal distribution, the tail probability of finding a value larger than 1.96 is equal to 0.025. We can now compare the estimated tail probability to the analytically calculated tail probability, and compare them to the tail probability estimated by fitting a normal distribution and an extreme value distribution to the data. For
+@tex
+$m = 1$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi><mo>=</mo><mn>1</mn>,
+</math>
+@end html
+ the distribution of 
+@tex
+$x$,
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>x</mi>
+</math>
+@end html
+ reduces to a standard normal distribution, and hence the tail probability is equal to 0.025. The kernel estimate of the tail probability is close to this value: @*
+@code{# using the data generated for m = 1} @*
+@code{>>> statistics.cpdfc(data, x = 1.96)} @*
+@code{[ 0.02511014]} @*
+
+We found 0.025 by fitting a normal distribution, and 0.050 by fitting an extreme value distribution. As 
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML">
+  <mi>m</mi>
+</math>
+@end html
+ increases, the analytically determined tail probability will become more similar to the value estimated from the extreme value distribution, and less similar to the estimate obtained by fitting a normal distribution, as shown in the table below:
+
+@float ,
+@multitable @columnfractions 0.08 0.19 0.19 0.20 0.20
+@item
+@tex
+$m$
+@end tex
+@html
+<math xmlns="http://www.w3.org/1998/Math/MathML"> 
+  <mi>m</mi>
+</math>
+@end html
+@tab Exact (analytic) @tab Kernel estimate @tab Normal distribution @tab Extreme value distribution
+@item 1 @tab 0.0250 @tab 0.0251 @tab 0.0250 @tab 0.0497
+@item 3 @tab 0.0310 @tab 0.0310 @tab 0.0250 @tab 0.0465
+@item 5 @tab 0.0329 @tab 0.0332 @tab 0.0250 @tab 0.0411
+@item 10 @tab 0.0352 @tab 0.0355 @tab 0.0250 @tab 0.0451
+@item 25 @tab 0.0374 @tab 0.0377 @tab 0.0250 @tab 0.0409
+@item 100 @tab 0.0398 @tab 0.0396 @tab 0.0250 @tab 0.0514
+@item 200 @tab 0.0405 @tab 0.0407 @tab 0.0250 @tab 0.0482
+@item 1000 @tab 0.0415 @tab 0.0417 @tab 0.0250 @tab 0.0454
+@item 10000 @tab 0.0424 @tab 0.0427 @tab 0.0250 @tab 0.0506
+@end multitable
+@end float
+    
+
+@chapter Installation instructions
+
+@noindent In the instructions below, @code{@emph{<version>}} refers to the version number.
+This software complies with the ANSI-C standard; compilation should therefore be straightforward.
+
+First, make sure that Numerical Python (version 1.1.1 or later) is installed on your system. To check your Numerical Python version, type @*
+@code{>>> import numpy; print numpy.version.version} @*
+at the Python prompt.
+
+To install Statistics for Python, unpack the file: @*
+@code{gunzip statistics-@emph{<version>}.tar.gz} @*
+@code{tar -xvf statistics-@emph{<version>}.tar} @*
+and change to the directory @code{statistics-@emph{<version>}}. From this directory, type @*
+@code{python setup.py config} @*
+@code{python setup.py build} @*
+@code{python setup.py install} @*
+This will configure, compile, and install the library. If the installation was successful, you can remove the directory
+@code{statistics-@emph{<version>}}.
+For Python on Windows, a binary installer is available from @url{http://bonsai.ims.u-tokyo.ac.jp/~mdehoon/software/python}.
+
+@bye
+

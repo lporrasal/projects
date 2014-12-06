@@ -1,0 +1,9 @@
+getwd()
+data <- read.table("NIReg20140509.csv",header=TRUE,sep=",")
+data
+head("NIReg20140509.txt")
+head(data)
+summary(data)
+fit <- lm(NI ~ RD,data)
+anova(fit)
+summary(fit)

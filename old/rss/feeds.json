@@ -1,0 +1,53 @@
+feeds.json
+
+[
+{
+"id": "dallas",
+"type": "rss",
+"name": "Dallas Morning News",
+"html_url": "http://www.dallasnews.com/",
+"rss_url": "http://www.dallasnews.com/newskiosk/rss/dallasnewslatestnews.xml"
+},
+{
+"id": "wapo",
+"type": "rss",
+"name": "Washington Post",
+"html_url": "http://www.washingtonpost.com?wprss=rss_homepage",
+"rss_url": "http://www.washingtonpost.com/rss/homepage"
+},
+{
+"id": "chicago",
+"type": "rss",
+"name": "Chicago Sun-Times",
+"html_url": "http://www.suntimes.com",
+"rss_url": "http://www.suntimes.com/rss/news/index.xml"
+},
+{
+"id": "latimes",
+"type": "rss",
+"name": "Los Angeles Times",
+"html_url": "http://latimes.tumblr.com/",
+"rss_url": "http://latimes.tumblr.com/rss"
+},
+{
+"id": "boston",
+"type": "rss",
+"name": "Boston Herald",
+"html_url": "http://www.bostonherald.com/feed",
+"rss_url": "http://www.bostonherald.com/rss_whole.xml"
+},
+{
+"id": "nytimes",
+"type": "rss",
+"name": "The New York Times",
+"html_url": "http://www.nytimes.com/pages/index.html?partner=rss&emc=rss",
+"rss_url": "http://www.nytimes.com/services/xml/rss/nyt/HomePage.xml"
+},
+{
+"id": "seattle",
+"type": "rss",
+"name": "The Seattle Times",
+"html_url": "http://seattletimes.com/html/home",
+"rss_url": "http://seattletimes.nwsource.com/rss/home.xml"
+}
+]

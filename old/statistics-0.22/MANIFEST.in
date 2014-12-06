@@ -1,0 +1,10 @@
+include MANIFEST.in
+include src/statistics.h
+include doc/Makefile
+include doc/manual.pdf
+include doc/manual.texinfo
+include doc/figure*.eps
+include doc/figure*.png
+include doc/html2xhtml.py
+include doc/index.xhtml
+include doc/*.xsl

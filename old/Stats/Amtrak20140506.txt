@@ -1,0 +1,7 @@
+getwd()
+data <- read.table("Amtrak20140506.csv",header=TRUE,row.names=1,sep=",")
+data
+mydata=data[,1]
+mydata
+summary(mydata)
+sd(mydata,na.rm=FALSE)

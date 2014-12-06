@@ -1,0 +1,12 @@
+getwd()
+setwd("~/Desktop/Former activities/Georgetown Analytics")
+data <- read.table(Amtrak20140421.txt, header=TRUE,sep="")
+data <- read.table(Amtrak20140421, header=TRUE,sep="")
+data <- read.table("Amtrak20140421.txt", header=TRUE,sep="")
+data <- read.table("Amtrak20140421.txt", header=TRUE,sep="\t")
+data
+head("Amtrak20140421.txt")
+head(data)
+summary(data)
+production.lm <-(data=production)
+sd(data,na.rm=FALSE)

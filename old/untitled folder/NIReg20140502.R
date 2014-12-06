@@ -1,0 +1,13 @@
+getwd()
+setwd("~/Desktop/Former activities/Georgetown Analytics")
+data <- read.table(NIReg20140502.txt, header=TRUE,sep="")
+data <- read.table(NIReg20140502, header=TRUE,sep="")
+data <- read.table("NIReg20140502.txt", header=TRUE,sep="")
+data <- read.table("NIReg20140502.txt", header=TRUE,sep="\t")
+data
+head("NIReg20140502.txt")
+head(data)
+summary(data)
+fit <- lm(NI ~ RD,data)
+anova(fit)
+summary(fit)

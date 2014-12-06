@@ -1,0 +1,57 @@
+Statistics for Python
+=====================
+
+INSTALLATION
+============
+
+In the top directory (containing setup.py and also this README file), type
+  python setup.py config
+  python setup.py build
+  python setup.py install
+
+You will need an ANSI C compiler such as GNU gcc, as well as the Numerical
+Python package. As of release 0.18 of Statistics for Python, you will need
+the "new" Numerical Python (NumPy version 1.1.1 or higher).
+
+The first step 'python setup.py config' runs a number of trial programs to
+discover the contents of the math library on your computer. This step may
+fail with Python versions older than 2.3. If so, it's safe to skip it, though
+that will disable some features in this software. The trial programs may
+generate error and warning messages; these can be ignored. Be sure that the
+current directory ('.') is in the PATH, so that Python can find the trial
+programs.
+
+You may need to log in as root the install this module. If you do not have root
+access, do
+  python setup.py install --prefix=/some/other/directory
+and set the environment variable
+  PYTHONPATH=/some/other/directory/lib/python2.2/site-packages
+The exact command depends on which shell you are using; the exact path will
+depend on the version of Python you are using.
+
+A Windows installer for the Statistics for Python extendion module is available
+from our website (http://bonsai.ims.u-tokyo.ac.jp/~mdehoon/software/python).
+
+
+MANUAL
+======
+
+See manual.pdf in the doc directory.
+
+
+LITERATURE
+==========
+
+B. W. Silverman: Density Estimation for Statistics and Data Analysis. Chapman
+and Hall, New York, 1986.
+D. W. Scott: Multivariate Density Estimation; Theory, Practice, and
+Visualization. John Wiley and Sons, New York, 1992.
+
+
+
+CONTACT
+=======
+
+Michiel de Hoon
+RIKEN Yokohama Institute
+mjldehoon@yahoo.com
